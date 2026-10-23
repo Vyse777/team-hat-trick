@@ -49,30 +49,28 @@ const GOALIE_PIXEL_GRID = [
 ];
 
 // 1985 Pixel Sprite for Skater (facing Right, matching Screenshot 2 & 3)
-// 22 cols x 20 rows
+// 20 cols x 18 rows
 // K = Black outline, B = Team body, L = Team highlight, D = Team dark
 // V = Helmet visor stripe, W = Visor secondary, S = Stick brown, T = Stick tape (team color)
 const SKATER_PIXEL_GRID = [
-  "....KKK...............",
-  "...KBBBK..............",
-  "...KBLLBK.............",
-  "...KBBBBKK............",
-  "..KKKKKKKKK...........",
-  ".KKWWWWWWWKK..........",
-  ".KWVVVVVVVWK.KK.......",
-  ".KKWWWWWWWKKKBBK......",
-  "..KKKKKKKKKKBBLBK.....",
-  "..KBBBBBBBBBBBLBK.....",
-  "..KBLLLLBBBBBBBK......",
-  "...KBBBBBBBBBBKSS.....",
-  "....KKKKKKKKKK..SS....",
-  ".................SS...",
-  "..................SS..",
-  "...................SS.",
-  "....................SS",
-  "....................TT",
-  "....................SS",
-  "....................KK"
+  "....KKK.............",
+  "...KBBBK............",
+  "...KBLLBK...........",
+  "...KBBBBKK..........",
+  "..KKKKKKKKK.........",
+  ".KKWWWWWWWKK........",
+  ".KWVVVVVVVWK.KK.....",
+  ".KKWWWWWWWKKKBBK....",
+  "..KKKKKKKKKKBBLBK...",
+  "..KBBBBBBBBBBBLBK...",
+  "..KBLLLLBBBBBBBK....",
+  "...KBBBBBBBBBBKSS...",
+  "....KKKKKKKKKK..SS..",
+  ".................SS.",
+  "..................SS",
+  "..................TT",
+  "..................SS",
+  "..................KK"
 ];
 
 // Trophy icon (Screenshot 4 GAME STATS)
@@ -90,30 +88,33 @@ const TROPHY_PIXEL_GRID = [
   ".KKKKKKKK."
 ];
 
-// Zamboni 1985 Pixel Sprite (facing Left as in Screenshot 4; flips when driving Right)
-// 32 cols x 24 rows
+// Zamboni 1985 Pixel Sprite (Square boxy design matching Screenshot 4!)
+// 24 cols x 22 rows (nearly square with circular turret ring, red cockpit & driver)
+// Y = Yellow body, O = Orange/gold shade, K = Black outline/ticks,
+// R = Red cockpit, B = Blue driver uniform, W = Light blue helmet/trim, P = Peach face
 const ZAMBONI_PIXEL_GRID = [
-  "....KKKKKKKKKKKKKKKKKKKKKK..KK..",
-  "..KKYYYYYYYYYYYYYYYYYYYYYYKKYYK.",
-  ".KYYYYYYYYYYYYYYYYYYYYYYYYYYYYK.",
-  "KYYYYYYYYYYYYKKKKYYYYYYYYYYYYYYK",
-  "KYYYYYYYYYYKKOOOOKKYYYYYYYYYYYYK",
-  "KYYYYYYYYYKOORRRROOKYYYYYYYYYYYK",
-  "KYYYYYYYYKOORRRRRROOKYYYYYYYYYYK",
-  "KYYYYYYYKOORRRKKKRRROKYYYYYYYYYK",
-  "KYYYYYYKOORRKKBBBKKRROKYYYYYYYYK",
-  "KYYYYYYKORRKBBBBBBBKROKYYYYYYYYK",
-  "KYYYYYYKORRKBWWWWWBKROKYYYYYYYYK",
-  "KYYYYYYKORRKBBBBBBBKROKYYYYYYYYK",
-  "KYYYYYYKOORRKKBBBKKRROKYYYYYYYYK",
-  "KYYYYYYYKOORRRKKKRRROKYYYYYYYYYK",
-  "KYYYYYYYYKOORRRRRROOKYYYYYYYYYYK",
-  "KYYYYYYYYYKOORRRROOKYYYYYYYYYYYK",
-  "KYYYYYYYYYYKKOOOOKKYYYYYYYYYYYYK",
-  "KYYYYYYYYYYYYKKKKYYYYYYYYYYYYYYK",
-  ".KYYYYYYYYYYYYYYYYYYYYYYYYYYYYK.",
-  "..KKYYYYYYYYYYYYYYYYYYYYYYKKYYK.",
-  "....KKKKKKKKKKKKKKKKKKKKKK..KK.."
+  "..KKKKKKKKKKKKKKKKKKKK..",
+  ".KYYYYYYYYYYYYYYYYYYYYK.",
+  "KYYOOOOOOOOOOOOOOOOOOYYK",
+  "KYOKKKKKKKYYYYKKKKKKKOYK",
+  "KYOKYYYYYKKKKKKYYYYYKOYY",
+  "KYOKYYYKKYYKKYYKKYYYKOYY",
+  "KYOKYYKYYKKKKKKYYKYYKOYY",
+  "KYOKYKYKKRRRRRRKKYKYKOYY",
+  "KYOKYKYKRRRRRRRRKYKYKOYY",
+  "KYOKYKKRRKBBBBKRRKKYKOYY",
+  "KYOKYKKRKBPPPPWBKRKYKOYY",
+  "KYOKYKKRKBPPPPWBKRKYKOYY",
+  "KYOKYKKRRKBBBBKRRKKYKOYY",
+  "KYOKYKYKRRRRRRRRKYKYKOYY",
+  "KYOKYKYKKRRRRRRKKYKYKOYY",
+  "KYOKYYKYYKKKKKKYYKYYKOYY",
+  "KYOKYYYKKYYKKYYKKYYYKOYY",
+  "KYOKYYYYYKKKKKKYYYYYKOYY",
+  "KYOKKKKKKKYYYYKKKKKKKOYK",
+  "KYYOOOOOOOOOOOOOOOOOOYYK",
+  ".KYYYYYYYYYYYYYYYYYYYYK.",
+  "..KKKKKKKKKKKKKKKKKKKK.."
 ];
 
 export class SpriteRenderer {
@@ -457,6 +458,39 @@ export class SpriteRenderer {
   }
 
   /**
+   * Compute the exact world (x, y) of a skater's hockey stick blade where the puck sits.
+   * Matches the exact rotation/snapping and pixel coordinates of both Classic and Modern modes!
+   */
+  static getStickBladePosition(skater, mode = 'classic', scale = 2.35) {
+    const swing = skater.swingTimer > 0 ? -0.45 : 0;
+
+    if (mode === 'modern') {
+      const rot = skater.angle + swing;
+      const localX = 24.5;
+      const localY = 15.0;
+      return {
+        x: skater.x + localX * Math.cos(rot) - localY * Math.sin(rot),
+        y: skater.y + localX * Math.sin(rot) + localY * Math.cos(rot)
+      };
+    }
+
+    // In 1985 Classic mode, rotation is quantized to 8 directions (multiples of PI/4)
+    // Note: in drawSkater, facing pure Left (±PI) uses scale(-1, -1) + rotate(swing),
+    // which is mathematically identical to rotating by PI + swing!
+    const snappedAngle = Math.round(skater.angle / (Math.PI / 4)) * (Math.PI / 4);
+    const rot = snappedAngle + swing;
+
+    // In SKATER_PIXEL_GRID, torso origin is (col 8, row 8) and the stick blade/tape is at (col 18.8, row 15.5)
+    const localX = (18.8 - 8) * scale;
+    const localY = (15.5 - 8) * scale;
+
+    return {
+      x: skater.x + localX * Math.cos(rot) - localY * Math.sin(rot),
+      y: skater.y + localX * Math.sin(rot) + localY * Math.cos(rot)
+    };
+  }
+
+  /**
    * Draw Skater Sprite
    * @param {CanvasRenderingContext2D} ctx
    * @param {number} x - center X
@@ -706,7 +740,7 @@ export class SpriteRenderer {
   }
 
   /**
-   * Draw the iconic Zamboni (Screenshot 4)
+   * Draw the iconic square-proportioned Zamboni (Screenshot 4)
    */
   static drawZamboni(ctx, x, y, facingLeft = true, mode = 'classic', scale = 2.8) {
     ctx.save();
@@ -716,39 +750,54 @@ export class SpriteRenderer {
     }
 
     if (mode === 'modern') {
-      // HD Resurfacer Zamboni
+      // HD Square-proportioned Classic Arcade Zamboni
       ctx.fillStyle = 'rgba(0,0,0,0.35)';
-      ctx.fillRect(-44, -28, 92, 60);
+      ctx.fillRect(-32, -29, 68, 62);
 
-      const grad = ctx.createLinearGradient(0, -30, 0, 30);
-      grad.addColorStop(0, '#FFD838');
-      grad.addColorStop(0.5, '#F8A818');
-      grad.addColorStop(1, '#D87800');
-      ctx.fillStyle = grad;
-      ctx.strokeStyle = '#000000';
-      ctx.lineWidth = 3;
-      ctx.beginPath();
-      ctx.roundRect(-45, -30, 90, 60, 10);
-      ctx.fill();
-      ctx.stroke();
-
-      // Rear ice conditioner blades
-      ctx.fillStyle = '#904810';
-      for (let by = -26; by <= 22; by += 8) {
-        ctx.fillRect(43, by, 7, 4);
+      // Left & right 6 conditioner prongs sticking out of the square body
+      ctx.fillStyle = '#A03818';
+      for (let i = 0; i < 6; i++) {
+        const py = -22 + i * 8.2;
+        ctx.fillRect(-39, py, 8, 4);
+        ctx.fillRect(31, py, 8, 4);
       }
 
-      // Driver cockpit oval
-      ctx.fillStyle = '#E03C20';
+      const grad = ctx.createLinearGradient(0, -30, 0, 30);
+      grad.addColorStop(0, '#FFE048');
+      grad.addColorStop(0.5, '#F8B820');
+      grad.addColorStop(1, '#D88010');
+      ctx.fillStyle = grad;
+      ctx.strokeStyle = '#000000';
+      ctx.lineWidth = 2.5;
       ctx.beginPath();
-      ctx.ellipse(-2, 0, 24, 18, 0, 0, Math.PI * 2);
+      ctx.roundRect(-33, -30, 66, 60, 5);
       ctx.fill();
       ctx.stroke();
 
-      // Driver helmet
-      ctx.fillStyle = '#58B0FF';
+      // Circular turret dial inside the square box
+      ctx.strokeStyle = '#000000';
+      ctx.lineWidth = 2;
       ctx.beginPath();
-      ctx.arc(0, 0, 9, 0, Math.PI * 2);
+      ctx.arc(0, 0, 24, 0, Math.PI * 2);
+      ctx.stroke();
+
+      // Red oval cockpit inside turret
+      ctx.fillStyle = '#E03C20';
+      ctx.beginPath();
+      ctx.ellipse(0, 0, 18, 13, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+
+      // Blue driver shoulders & peach head
+      ctx.fillStyle = '#1868D8';
+      ctx.beginPath();
+      ctx.ellipse(2, 0, 10, 8, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.fillStyle = '#FFAA90';
+      ctx.beginPath();
+      ctx.arc(-2, 0, 5.5, 0, Math.PI * 2);
       ctx.fill();
       ctx.stroke();
 
@@ -758,17 +807,26 @@ export class SpriteRenderer {
 
     const colorMap = {
       K: '#000000',
-      Y: '#F8C020',
-      O: '#E87818',
+      Y: '#F8C820',
+      O: '#E88018',
       R: '#D83020',
       B: '#1868D8',
-      W: '#78C8FF'
+      W: '#78C8FF',
+      P: '#FFAA90'
     };
 
     const rows = ZAMBONI_PIXEL_GRID.length;
     const cols = ZAMBONI_PIXEL_GRID[0].length;
     const startX = -(cols * scale) / 2;
     const startY = -(rows * scale) / 2;
+
+    // 6 serrated conditioner prongs on left & right edges as seen in Screenshot 4
+    ctx.fillStyle = '#A03818';
+    for (let i = 0; i < 6; i++) {
+      const py = startY + (2.5 + i * 3.1) * scale;
+      ctx.fillRect(Math.round(startX - scale * 2.2), Math.round(py), Math.ceil(scale * 2.2), Math.ceil(scale * 1.4));
+      ctx.fillRect(Math.round(-startX), Math.round(py), Math.ceil(scale * 2.2), Math.ceil(scale * 1.4));
+    }
 
     for (let r = 0; r < rows; r++) {
       for (let c = 0; c < cols; c++) {
@@ -783,13 +841,6 @@ export class SpriteRenderer {
           );
         }
       }
-    }
-
-    // Add the brown/red serrated conditioner prongs on left & right edges as seen in Screenshot 4
-    ctx.fillStyle = '#A03818';
-    for (let py = -rows * scale * 0.42; py <= rows * scale * 0.42; py += scale * 3) {
-      ctx.fillRect(startX - scale * 2, py, scale * 2, scale * 1.4);
-      ctx.fillRect(-startX, py, scale * 2, scale * 1.4);
     }
 
     ctx.restore();

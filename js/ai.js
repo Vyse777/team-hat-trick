@@ -94,7 +94,7 @@ export class HockeyAI {
         // Forecheck / body-check the puck carrier!
         targetX = puckCarrier.x + puckCarrier.vx * 0.12;
         targetY = puckCarrier.y + puckCarrier.vy * 0.12;
-        if (distToCarrier < 46 && Math.random() < 0.18 * diff) {
+        if (distToCarrier < 36 && Math.random() < 0.025 * diff) {
           shootJustPressed = true; // Trigger lunge/vicious check!
         }
       } else {

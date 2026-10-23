@@ -173,6 +173,7 @@ export class TeamHatTrickGame {
       humanPlayer: this.slotAssignments[id], // null for CPU, or 0..3 for P1..P4
       possessionTime: 0,
       swingTimer: 0,
+      checkTimer: 0,
       stunTimer: 0,
       checkCooldown: 0,
       stats: {
@@ -249,6 +250,7 @@ export class TeamHatTrickGame {
       s.angle = s.startAngle;
       s.stunTimer = 0;
       s.swingTimer = 0;
+      s.checkTimer = 0;
       s.possessionTime = 0;
     }
     this.blueGoalie.y = this.rink.centerY;
@@ -636,8 +638,9 @@ export class TeamHatTrickGame {
     const accel = 680;
     const iceFriction = 0.965;
 
-    for (const s of this.skaters) {
+      for (const s of this.skaters) {
       if (s.swingTimer > 0) s.swingTimer = Math.max(0, s.swingTimer - dt);
+      if (s.checkTimer > 0) s.checkTimer = Math.max(0, s.checkTimer - dt);
       if (s.checkCooldown > 0) s.checkCooldown = Math.max(0, s.checkCooldown - dt);
 
       if (s.stunTimer > 0) {
@@ -763,7 +766,8 @@ export class TeamHatTrickGame {
   }
 
   performBodyCheckLunge(skater) {
-    skater.swingTimer = 0.2;
+    skater.swingTimer = 0.24;
+    skater.checkTimer = 0.26;
     skater.checkCooldown = 0.45;
     // Burst of speed in facing direction to deliver a body check
     skater.vx += Math.cos(skater.angle) * 145;
@@ -780,53 +784,55 @@ export class TeamHatTrickGame {
         const dy = b.y - a.y;
         const dist = Math.hypot(dx, dy);
         const minDist = a.radius + b.radius;
+        const checkReach = (a.checkTimer > 0 || b.checkTimer > 0) ? 6 : 0;
 
-        if (dist > 0 && dist < minDist) {
+        if (dist > 0 && dist < minDist + checkReach) {
           const nx = dx / dist;
           const ny = dy / dist;
-          const overlap = minDist - dist;
 
-          a.x -= nx * overlap * 0.5;
-          a.y -= ny * overlap * 0.5;
-          b.x += nx * overlap * 0.5;
-          b.y += ny * overlap * 0.5;
+          if (dist < minDist) {
+            const overlap = minDist - dist;
+            a.x -= nx * overlap * 0.5;
+            a.y -= ny * overlap * 0.5;
+            b.x += nx * overlap * 0.5;
+            b.y += ny * overlap * 0.5;
+          }
 
-          // Check if opposing teams collided fast enough for a "VICIOUS CHECK"!
-          if (a.team !== b.team) {
-            const speedA = Math.hypot(a.vx, a.vy) + (a.swingTimer > 0 ? 90 : 0);
-            const speedB = Math.hypot(b.vx, b.vy) + (b.swingTimer > 0 ? 90 : 0);
-
-            if ((speedA > 145 || speedB > 145) && a.stunTimer <= 0 && b.stunTimer <= 0) {
-              const hitter = speedA >= speedB ? a : b;
+          // A "VICIOUS CHECK" ONLY happens if a player without the puck explicitly pressed
+          // the Shoot/Check button (Space/Enter), activating checkTimer > 0!
+          if (a.team !== b.team && (a.checkTimer > 0 || b.checkTimer > 0)) {
+            if (a.stunTimer <= 0 && b.stunTimer <= 0) {
+              const hitter = a.checkTimer >= b.checkTimer ? a : b;
               const victim = hitter === a ? b : a;
 
-              if (Math.hypot(hitter.vx, hitter.vy) > 125 || hitter.swingTimer > 0) {
-                hitter.stats.viciousChecks++;
-                victim.stunTimer = 0.65;
-                const hitSign = hitter === a ? 1 : -1;
-                victim.vx = nx * hitSign * 220;
-                victim.vy = ny * hitSign * 220;
+              hitter.checkTimer = 0; // Consume the check
+              hitter.stats.viciousChecks++;
+              victim.stunTimer = 0.65;
+              const hitSign = hitter === a ? 1 : -1;
+              victim.vx = nx * hitSign * 220;
+              victim.vy = ny * hitSign * 220;
 
-                if (this.puck.owner === victim) {
-                  this.puck.owner = null;
-                  this.puck.pickupCooldown = 0.25;
-                  this.puck.vx = nx * hitSign * 160 + (Math.random() - 0.5) * 80;
-                  this.puck.vy = ny * hitSign * 160 + (Math.random() - 0.5) * 80;
-                }
-                this.audio.playCheck();
+              if (this.puck.owner === victim) {
+                this.puck.owner = null;
+                this.puck.pickupCooldown = 0.25;
+                this.puck.vx = nx * hitSign * 160 + (Math.random() - 0.5) * 80;
+                this.puck.vy = ny * hitSign * 160 + (Math.random() - 0.5) * 80;
               }
+              this.audio.playCheck();
             }
           }
 
-          // Elastic velocity exchange
-          const kx = a.vx - b.vx;
-          const ky = a.vy - b.vy;
-          const p = 2 * (nx * kx + ny * ky) / 2;
-          if (p > 0) {
-            a.vx -= p * nx * 0.6;
-            a.vy -= p * ny * 0.6;
-            b.vx += p * nx * 0.6;
-            b.vy += p * ny * 0.6;
+          // Normal physical bump if touching
+          if (dist < minDist) {
+            const kx = a.vx - b.vx;
+            const ky = a.vy - b.vy;
+            const p = 2 * (nx * kx + ny * ky) / 2;
+            if (p > 0) {
+              a.vx -= p * nx * 0.6;
+              a.vy -= p * ny * 0.6;
+              b.vx += p * nx * 0.6;
+              b.vy += p * ny * 0.6;
+            }
           }
         }
       }
@@ -860,11 +866,11 @@ export class TeamHatTrickGame {
     }
 
     if (p.owner) {
-      // Position puck on the blade of the carrier's hockey stick
-      const stickDist = 23;
-      const stickAngle = p.owner.angle + 0.35;
-      p.x = p.owner.x + Math.cos(stickAngle) * stickDist;
-      p.y = p.owner.y + Math.sin(stickAngle) * stickDist;
+      // Position puck directly on the blade of the carrier's hockey stick
+      // matching the exact Classic 8-way pixel stick or Modern HD stick!
+      const bladePos = SpriteRenderer.getStickBladePosition(p.owner, this.graphicsMode);
+      p.x = bladePos.x;
+      p.y = bladePos.y;
       p.vx = p.owner.vx;
       p.vy = p.owner.vy;
       return;
@@ -929,12 +935,11 @@ export class TeamHatTrickGame {
       if (s.stunTimer > 0) continue;
       if (p.pickupCooldown > 0 && p.lastCarrier === s) continue;
 
-      const stickX = s.x + Math.cos(s.angle + 0.3) * 16;
-      const stickY = s.y + Math.sin(s.angle + 0.3) * 16;
+      const bladePos = SpriteRenderer.getStickBladePosition(s, this.graphicsMode);
       const distBody = Math.hypot(p.x - s.x, p.y - s.y);
-      const distStick = Math.hypot(p.x - stickX, p.y - stickY);
+      const distStick = Math.hypot(p.x - bladePos.x, p.y - bladePos.y);
 
-      if (distBody < s.radius + p.radius + 4 || distStick < 16) {
+      if (distBody < s.radius + p.radius + 4 || distStick < 18) {
         // Claim possession!
         if (this.faceoffPending) {
           s.stats.faceoffsWon++;
@@ -1205,19 +1210,6 @@ export class TeamHatTrickGame {
   renderGameplayScreen(ctx) {
     this.renderRinkAndScoreboard(ctx);
 
-    // Draw Puck
-    const p = this.puck;
-    ctx.save();
-    if (this.graphicsMode === 'modern') {
-      ctx.shadowColor = 'rgba(0,0,0,0.45)';
-      ctx.shadowBlur = 4;
-    }
-    ctx.fillStyle = '#000000';
-    ctx.beginPath();
-    ctx.arc(Math.round(p.x), Math.round(p.y), p.radius, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.restore();
-
     // Draw the 2 Goalies (controlled by each team's Defense controller!)
     SpriteRenderer.drawGoalie(ctx, this.blueGoalie.x, this.blueGoalie.y, 'blue', this.graphicsMode);
     SpriteRenderer.drawGoalie(ctx, this.redGoalie.x, this.redGoalie.y, 'red', this.graphicsMode);
@@ -1231,6 +1223,32 @@ export class TeamHatTrickGame {
         humanLabel
       });
     }
+
+    // Draw Puck (snapped directly onto the carrier's stick blade if possessed)
+    const p = this.puck;
+    if (p.owner) {
+      const bladePos = SpriteRenderer.getStickBladePosition(p.owner, this.graphicsMode);
+      p.x = bladePos.x;
+      p.y = bladePos.y;
+    }
+
+    ctx.save();
+    if (this.graphicsMode === 'modern') {
+      ctx.shadowColor = 'rgba(0,0,0,0.45)';
+      ctx.shadowBlur = 4;
+      ctx.fillStyle = '#000000';
+      ctx.beginPath();
+      ctx.arc(Math.round(p.x), Math.round(p.y), p.radius, 0, Math.PI * 2);
+      ctx.fill();
+    } else {
+      // Classic 1985 pixel puck right on the stick blade
+      const px = Math.round(p.x);
+      const py = Math.round(p.y);
+      ctx.fillStyle = '#000000';
+      ctx.fillRect(px - 4, py - 3, 8, 6);
+      ctx.fillRect(px - 3, py - 4, 6, 8);
+    }
+    ctx.restore();
 
     // Goal Celebration Banner
     if (this.state === STATE.GOAL_CELEBRATION && this.lastScorerTeam) {
