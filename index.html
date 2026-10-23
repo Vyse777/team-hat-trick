@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Team Hat Trick (1985 Bally Sente) — Arcade Edition</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="arcade-header">
+    <div class="brand-group">
+      <span class="brand-badge">BALLY SENTE 1985</span>
+      <span class="brand-title">TEAM HAT TRICK</span>
+    </div>
+
+    <div class="toolbar-controls">
+      <!-- Graphics Style Switcher: Classic 1985 Pixel vs Updated Modern HD -->
+      <div class="mode-switch-group" title="Switch between 1985 Classic Pixel and Updated Modern HD graphics (Shortcut: G)">
+        <button id="btn-mode-classic" class="btn active">1985 CLASSIC</button>
+        <button id="btn-mode-modern" class="btn">MODERN HD</button>
+      </div>
+
+      <button id="btn-crt" class="btn active" title="Toggle CRT Scanline Effect">CRT: ON</button>
+      <button id="btn-mute" class="btn active" title="Toggle CEM3394 Arcade Synthesizer Audio">SOUND: ON</button>
+      <button id="btn-coin" class="btn btn-coin" title="Insert Coin (Shortcut: C or 5)">+ COIN</button>
+
+      <select id="select-difficulty" class="select-input" title="CPU AI Difficulty">
+        <option value="0.76">AI: EASY</option>
+        <option value="0.92" selected>AI: NORMAL</option>
+        <option value="1.08">AI: HARD</option>
+      </select>
+
+      <select id="select-duration" class="select-input" title="Regulation Period Length">
+        <option value="105" selected>TIME: 1:45 (CLASSIC)</option>
+        <option value="120">TIME: 2:00</option>
+        <option value="180">TIME: 3:00</option>
+      </select>
+
+      <button id="btn-title-screen" class="btn" title="Return to Title Screen">TITLE</button>
+      <button id="btn-select-screen" class="btn" title="Go to Select Players Screen">SELECT PLAYERS</button>
+      <button id="btn-zamboni-demo" class="btn" title="Preview Post-Game Stats & Zamboni Ice Resurfacing">ZAMBONI / STATS</button>
+    </div>
+  </header>
+
+  <main class="cabinet-bezel">
+    <div class="screen-container">
+      <canvas id="game-canvas" width="800" height="520" tabindex="0"></canvas>
+      <div id="crt-overlay" class="crt-overlay"></div>
+    </div>
+  </main>
+
+  <section class="control-deck">
+    <div class="deck-card blue-card">
+      <h3>PLAYER 1 CONTROLS</h3>
+      <p>Move: <span class="key-badge">W</span> <span class="key-badge">A</span> <span class="key-badge">S</span> <span class="key-badge">D</span> (or Gamepad 1)</p>
+      <p>Shoot / Pass / Vicious Check: <span class="key-badge">SPACE</span> or <span class="key-badge">F</span></p>
+    </div>
+
+    <div class="deck-card red-card">
+      <h3>PLAYER 2 CONTROLS</h3>
+      <p>Move: <span class="key-badge">↑</span> <span class="key-badge">←</span> <span class="key-badge">↓</span> <span class="key-badge">→</span> (or Gamepad 2)</p>
+      <p>Shoot / Pass / Vicious Check: <span class="key-badge">ENTER</span> or <span class="key-badge">/</span></p>
+    </div>
+
+    <div class="deck-card purple-card">
+      <h3>CO-OP OR VERSUS (SELECT SCREEN)</h3>
+      <p>Pick <strong>any</strong> of the 4 boxes (<span class="key-badge">1</span>–<span class="key-badge">4</span>, click, or move cursor): team up on the <strong>same team</strong> or face off on <strong>separate teams</strong>! Unfilled boxes are played by CPU AI.</p>
+    </div>
+
+    <div class="deck-card purple-card">
+      <h3>6 ON-ICE ENTITIES &amp; TANDEM GOALIE</h3>
+      <p>Each team has <strong>1 Goalie + 1 Defense + 1 Offense</strong>. Just like the 1985 arcade cabinet, the <strong>Defense</strong> controller moves both the Defense skater AND the team's <strong>Goalie</strong> vertically!</p>
+    </div>
+  </section>
+
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,235 @@
+/* ============================================================================
+   TEAM HAT TRICK (1985 Bally Sente) - Arcade Cabinet & UI Styles
+   ============================================================================ */
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: radial-gradient(circle at center, #182034 0%, #090c14 100%);
+  color: #e8eef7;
+  font-family: 'Courier New', Courier, monospace;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 12px 16px 24px;
+  user-select: none;
+}
+
+.arcade-header {
+  width: 100%;
+  max-width: 960px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  background: #111624;
+  border: 2px solid #8830a8;
+  border-radius: 10px;
+  padding: 10px 14px;
+  margin-bottom: 12px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.55);
+}
+
+.brand-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.brand-badge {
+  background: linear-gradient(180deg, #ffd848 0%, #f0a018 100%);
+  color: #111;
+  font-weight: 900;
+  font-size: 13px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  letter-spacing: 0.5px;
+  border: 2px solid #000;
+}
+
+.brand-title {
+  font-size: 16px;
+  font-weight: 800;
+  color: #4dd4d4;
+  letter-spacing: 1px;
+}
+
+.toolbar-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.mode-switch-group {
+  display: inline-flex;
+  background: #080b12;
+  border: 1px solid #3a4664;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.btn {
+  background: #1c253b;
+  color: #c8d4e8;
+  border: 1px solid #3a4664;
+  padding: 6px 11px;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  border-radius: 5px;
+  transition: all 0.15s ease;
+}
+
+.mode-switch-group .btn {
+  border: none;
+  border-radius: 0;
+}
+
+.btn:hover {
+  background: #283655;
+  color: #ffffff;
+}
+
+.btn.active {
+  background: #1868d8;
+  color: #ffffff;
+  border-color: #58b0ff;
+}
+
+.btn-coin {
+  background: #d89010;
+  color: #000000;
+  border-color: #ffd848;
+}
+
+.btn-coin:hover {
+  background: #f0b020;
+  color: #000000;
+}
+
+.select-input {
+  background: #1c253b;
+  color: #e8eef7;
+  border: 1px solid #3a4664;
+  border-radius: 5px;
+  padding: 5px 8px;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+/* Arcade Bezel & Screen */
+.cabinet-bezel {
+  position: relative;
+  width: 100%;
+  max-width: 920px;
+  background: #0a0a0e;
+  border: 6px solid #262c3f;
+  border-radius: 16px;
+  padding: 12px;
+  box-shadow:
+    0 16px 48px rgba(0, 0, 0, 0.8),
+    inset 0 0 18px rgba(0, 0, 0, 0.9);
+}
+
+.screen-container {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 800 / 520;
+  background: #000;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 2px solid #000;
+}
+
+#game-canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  outline: none;
+}
+
+/* Optional CRT Scanlines Overlay */
+.crt-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(
+      rgba(18, 16, 16, 0) 50%,
+      rgba(0, 0, 0, 0.22) 50%
+    ),
+    radial-gradient(
+      circle at center,
+      transparent 68%,
+      rgba(0, 0, 0, 0.32) 100%
+    );
+  background-size: 100% 4px, 100% 100%;
+  z-index: 5;
+}
+
+.crt-overlay.hidden {
+  display: none;
+}
+
+/* Control deck instructions below screen */
+.control-deck {
+  width: 100%;
+  max-width: 960px;
+  margin-top: 14px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 10px;
+}
+
+.deck-card {
+  background: #111624;
+  border: 1px solid #2b3550;
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.deck-card h3 {
+  font-size: 13px;
+  margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.deck-card.blue-card h3 {
+  color: #58b0ff;
+}
+
+.deck-card.red-card h3 {
+  color: #ff7858;
+}
+
+.deck-card.purple-card h3 {
+  color: #d088ff;
+}
+
+.key-badge {
+  display: inline-block;
+  background: #232d46;
+  border: 1px solid #485880;
+  color: #ffd848;
+  padding: 1px 5px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 700;
+}
