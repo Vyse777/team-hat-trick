@@ -1,0 +1,21 @@
+{
+  "name": "team-hat-trick",
+  "version": "1.0.0",
+  "description": "Team Hat Trick (1985 Bally Sente) — Arcade Edition",
+  "main": "server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "keywords": [
+    "arcade",
+    "hockey",
+    "bally-sente",
+    "retrogaming",
+    "canvas",
+    "web-audio"
+  ],
+  "author": "",
+  "license": "GPL-3.0"
+}
